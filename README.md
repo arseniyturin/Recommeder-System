@@ -1,18 +1,14 @@
 # User and Item Based Recommender System
 
-This is tutorial from the book "Data Science From Scratch" by Joel Grus. In this tutorial author explains differences and approaches of two most common ways to build recommender systems: user-based collaborative filtering and item-based collaborative filtering. In the essence, user-based system finds users with similar items/iterests by utilizing similarity metric, such as cosine similarity, or distance metric (ex: Kmeans) and provides user of interest with new items suggested from similar users. In item-based system algorithm is trying to find similar items without involvment of the user.
+This is tutorial from the book "Data Science From Scratch" by Joel Grus. In this tutorial author explains differences and approaches of two most common ways to build recommender systems: user-based collaborative filtering and item-based collaborative filtering.
+- **User-based** approach finds users with similar items/iterests by utilizing similarity metric, such as cosine similarity, or distance metric (ex: KNN) and provides user of interest with new items suggested from similar users. 
+- **Item-based** approach is trying to find similar items without involvement of the user.
 
 ## Importing Libraries
 
 
 ```python
-from numpy import dot
-import math
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 from collections import defaultdict
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics import pairwise_distances
 ```
 
 ## Data
@@ -44,8 +40,14 @@ In the tutorial author decides to use cosine similarity metric.
 
 
 ```python
+def dot(v, w):
+    return sum([i*j for i,j in zip(v,w)])
+```
+
+
+```python
 def cosine_similarity(v, w):
-    return dot(v, w) / math.sqrt(dot(v, v) * dot(w, w))
+    return dot(v, w) / (dot(v, v) * dot(w, w))**(1/2)
 ```
 
 First, we need to extract all unique items (interests) from all the users
@@ -173,7 +175,7 @@ user_based_suggestions(0, include_current_interests=False) # user 0 was suggeste
 
 
 
-## Item-Based Collaborative Filtering
+## 2. Item-Based Collaborative Filtering
 
 
 ```python
@@ -190,7 +192,8 @@ interest_similarities = [[cosine_similarity(user_vector_i, user_vector_j)
 
 
 ```python
-def most_similar_interests_to(interest_id):
+def most_similar_interests_to(interest: str) -> list:
+    interest_id = unique_interests.index('Big Data')
     similarities = interest_similarities[interest_id]
     pairs = [(unique_interests[other_interest_id], similarity)
             for other_interest_id, similarity in enumerate(similarities)
@@ -200,26 +203,28 @@ def most_similar_interests_to(interest_id):
 
 
 ```python
-most_similar_interests_to(4) # Hadoop
+most_similar_interests_to('Big Data')
 ```
 
 
 
 
-    [('Big Data', 0.8164965809277261),
-     ('Java', 0.8164965809277261),
-     ('MapReduce', 0.7071067811865475),
-     ('Spark', 0.7071067811865475),
-     ('Storm', 0.7071067811865475),
-     ('Cassandra', 0.5),
-     ('HBase', 0.4082482904638631)]
+    [('Hadoop', 0.8164965809277261),
+     ('Java', 0.6666666666666666),
+     ('MapReduce', 0.5773502691896258),
+     ('Spark', 0.5773502691896258),
+     ('Storm', 0.5773502691896258),
+     ('Cassandra', 0.4082482904638631),
+     ('artificial intelligence', 0.4082482904638631),
+     ('deep learning', 0.4082482904638631),
+     ('neural networks', 0.4082482904638631),
+     ('HBase', 0.3333333333333333)]
 
 
 
 
 ```python
-def item_based_suggestions(user_id, include_current_interests=False):
-    
+def item_based_suggestions(user_id: int) -> list:
     # add up the similar interests
     suggestions = defaultdict(float)
     user_interest_vector = user_interest_matrix[user_id]
@@ -231,13 +236,7 @@ def item_based_suggestions(user_id, include_current_interests=False):
     
     # sort them by weight
     suggestions = sorted(suggestions.items(), key=lambda similarity: similarity[1], reverse=True)
-    
-    if include_current_interests:
-        return suggestions
-    else:
-        return [(suggestion, weight)
-                for suggestion, weight in suggestions
-                if suggestion not in users_interests[user_id]]
+    return suggestions
 ```
 
 
@@ -248,23 +247,19 @@ item_based_suggestions(0)
 
 
 
-    [('MapReduce', 1.861807319565799),
-     ('MongoDB', 1.3164965809277263),
-     ('Postgres', 1.3164965809277263),
-     ('NoSQL', 1.2844570503761732),
-     ('MySQL', 0.5773502691896258),
-     ('databases', 0.5773502691896258),
-     ('Haskell', 0.5773502691896258),
-     ('programming languages', 0.5773502691896258),
-     ('artificial intelligence', 0.4082482904638631),
-     ('deep learning', 0.4082482904638631),
-     ('neural networks', 0.4082482904638631),
-     ('C++', 0.4082482904638631),
-     ('Python', 0.2886751345948129),
-     ('R', 0.2886751345948129)]
+    [('Hadoop', 5.715476066494083),
+     ('Java', 4.666666666666666),
+     ('MapReduce', 4.041451884327381),
+     ('Spark', 4.041451884327381),
+     ('Storm', 4.041451884327381),
+     ('Cassandra', 2.8577380332470415),
+     ('artificial intelligence', 2.8577380332470415),
+     ('deep learning', 2.8577380332470415),
+     ('neural networks', 2.8577380332470415),
+     ('HBase', 2.333333333333333)]
 
 
 
 ## Conclusion
 
-Both approaches returned exactly the same results
+Both approaches returned identical results
